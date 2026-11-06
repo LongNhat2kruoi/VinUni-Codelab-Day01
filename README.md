@@ -46,14 +46,16 @@
   4. Chọn **"Create API key"** và tạo khóa cho dự án mới hoặc dự án hiện có.
   5. Sao chép API key đã tạo (nó sẽ có dạng bắt đầu bằng `AIzaSy...`).
 
-* **OpenAI API Key (OPENAI_API_KEY):**
-  1. Truy cập [OpenAI API Keys Platform](https://platform.openai.com/api-keys).
-  2. Đăng nhập/Đăng ký tài khoản OpenAI của bạn.
-  3. Bấm vào nút **"Create new secret key"**.
-  4. Đặt tên gợi nhớ cho key (ví dụ: `VinUni_Lab1`) và chọn quyền hạn (mặc định là All).
-  5. Sao chép API key đã tạo (nó sẽ có dạng bắt đầu bằng `sk-proj-...`).
-  > [!WARNING]
-  > Key OpenAI chỉ hiển thị duy nhất **một lần** ngay khi tạo. Hãy lưu trữ key an toàn.
+* **OpenRouter API Key (OPENROUTER_API_KEY):**
+  1. Truy cập [OpenRouter Keys](https://openrouter.ai/settings/keys).
+  2. Đăng nhập và tạo API key mới.
+  3. Lưu key vào biến `OPENROUTER_API_KEY`; không commit khóa vào Git.
+
+* **xAI API Key (XAI_API_KEY) cho Grok:**
+  1. Truy cập [xAI Console](https://console.x.ai/).
+  2. Đăng nhập và nạp credit cho tài khoản API nếu cần.
+  3. Mở trang **API Keys** và tạo một khóa mới.
+  4. Lưu khóa vào biến `XAI_API_KEY`; không commit khóa vào Git.
 
 ---
 
@@ -63,20 +65,23 @@ Bạn có thể thiết lập biến môi trường trực tiếp từ terminal 
 
 * **Windows (PowerShell):**
   ```powershell
-  $env:OPENAI_API_KEY="sk-proj-your-openai-key-here"
+  $env:OPENROUTER_API_KEY="sk-or-your-openrouter-key-here"
   $env:GEMINI_API_KEY="AIzaSy-your-gemini-key-here"
+  $env:XAI_API_KEY="xai-your-key-here"
   ```
 
 * **Windows (CMD):**
   ```cmd
-  set OPENAI_API_KEY=sk-proj-your-openai-key-here
+  set OPENROUTER_API_KEY=sk-or-your-openrouter-key-here
   set GEMINI_API_KEY=AIzaSy-your-gemini-key-here
+  set XAI_API_KEY=xai-your-key-here
   ```
 
 * **macOS/Linux (Terminal):**
   ```bash
-  export OPENAI_API_KEY="sk-proj-your-openai-key-here"
+  export OPENROUTER_API_KEY="sk-or-your-openrouter-key-here"
   export GEMINI_API_KEY="AIzaSy-your-gemini-key-here"
+  export XAI_API_KEY="xai-your-key-here"
   ```
 
 > [!TIP]
@@ -89,7 +94,7 @@ Bạn có thể thiết lập biến môi trường trực tiếp từ terminal 
 Để hoàn thành bài lab một cách khoa học, hãy đi theo trình tự sau:
 
     A[Task 1: call_openai] --> B[Task 2: call_gemini]
-    B --> C[Task 3: call_anthropic]
+    B --> C[Task 3: call_grok]
     C --> D[Task 4: compare_models]
     D --> E[Task 5: streaming_chatbot]
     E --> F[Bonus A: retry_with_backoff]
@@ -102,7 +107,7 @@ Bạn có thể thiết lập biến môi trường trực tiếp từ terminal 
 
 ### 🔹 Task 1: `call_openai` (OpenAI API)
 * **SDK cần dùng:** `from openai import OpenAI`
-* **Cách khởi tạo:** `client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))`
+* **Cách khởi tạo:** `client = OpenAI(api_key=os.getenv("OPENROUTER_API_KEY"), base_url="https://openrouter.ai/api/v1")`
 * **Hàm gọi:** `client.chat.completions.create(...)`
 * **Tham số:** 
   * `model`: chuỗi tên model (`gpt-4o` hoặc `gpt-4o-mini`).
@@ -122,7 +127,7 @@ Bạn có thể thiết lập biến môi trường trực tiếp từ terminal 
 
 ---
 
-### 🔹 Task 2: `call_gemini` (Google Gemini 2.5) — Trọng tâm chính!
+### 🔹 Task 2: `call_gemini` (Google Gemini 3.8) — Trọng tâm chính!
 Chúng ta sẽ sử dụng SDK mới nhất của Google (`google-genai`):
 * **SDK cần dùng:** `from google import genai` và `from google.genai import types`
 * **Cách khởi tạo:** `client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))`
@@ -148,12 +153,41 @@ Chúng ta sẽ sử dụng SDK mới nhất của Google (`google-genai`):
 
 ---
 
+### 🔹 Task 3: `call_grok` (xAI Grok 4.7)
+Grok cung cấp API tương thích với OpenAI SDK. Bài lab sử dụng Responses API theo khuyến nghị hiện hành của xAI:
+* **SDK cần dùng:** `from openai import OpenAI`
+* **Cách khởi tạo:**
+  ```python
+  client = OpenAI(
+      api_key=os.getenv("XAI_API_KEY"),
+      base_url="https://api.x.ai/v1",
+  )
+  ```
+* **Hàm gọi:**
+  ```python
+  response = client.responses.create(
+      model="grok-4.7",
+      input=prompt,
+      temperature=temperature,
+      top_p=top_p,
+      max_output_tokens=max_tokens,
+  )
+  ```
+* **Lấy nội dung và Token Usage:**
+  ```python
+  text = response.output_text
+  input_tokens = response.usage.input_tokens
+  output_tokens = response.usage.output_tokens
+  ```
+
+---
+
 ### 🔹 Task 5: `streaming_chatbot` (Gemini Streaming + History)
 Streaming giúp tạo trải nghiệm người dùng mượt mà giống như ChatGPT (chữ chạy đến đâu hiển thị đến đó).
 * **Streaming logic:**
   ```python
   response_stream = client.models.generate_content_stream(
-      model="gemini-2.5-flash",
+      model="gemini-3.8-flash",
       contents=formatted_history
   )
   for chunk in response_stream:
@@ -180,6 +214,8 @@ Streaming giúp tạo trải nghiệm người dùng mượt mà giống như Ch
   * **MacOS/Linux:** `export GEMINI_API_KEY="AIzaSy..."`
   * **Windows (PowerShell):** `$env:GEMINI_API_KEY="AIzaSy..."`
   * **Windows (CMD):** `set GEMINI_API_KEY=AIzaSy...`
+
+Nếu gọi Grok, hãy thiết lập `XAI_API_KEY` tương tự và kiểm tra client đang dùng `https://api.x.ai/v1`.
 
 ### 🔴 Lỗi `RateLimitError`
 * **Nguyên nhân:** Bạn gửi quá nhiều request trong một khoảng thời gian ngắn trên tài khoản Free.
